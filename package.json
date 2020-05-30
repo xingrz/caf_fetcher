@@ -1,0 +1,21 @@
+{
+  "name": "caf_fetcher",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/fetcher.js",
+  "scripts": {
+    "start": "node src/fetcher.js",
+    "dev": "./node_modules/.bin/nodemon -w src ."
+  },
+  "author": "XiNGRZ <chenxingyu92@gmail.com>",
+  "license": "APACHE-2.0",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
+  "dependencies": {
+    "moment": "^2.26.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.5"
+  }
+}
