@@ -7,11 +7,36 @@ const schedule = require('./utils/schedule');
 const sha1 = require('./utils/sha1');
 
 const INTERVAL_MS = 2 * 60 * 60 * 1000;
-const SEGMENT_SIZE = process.env.SEGMENT_SIZE || 200;
 const OUT_DIR = join(__dirname, '..', 'data');
 
 function shortDate(date) {
   return moment.utc(date).format('YYYYMMDD');
+}
+
+function slice(array, size) {
+  return {
+    head: array.slice(0, size),
+    tail: array.slice(size),
+  };
+}
+
+async function writeFile(data, next) {
+  const json = JSON.stringify({ data, next });
+
+  const hash = sha1(json).substr(0, 8);
+  const date = shortDate(data[0].date);
+
+  const name = `${date}-${hash}`;
+  const file = join(OUT_DIR, `static-${name}.json`);
+
+  if (await pathExists(file)) {
+    // console.log(`  Skipped ${next}.json`);
+  } else {
+    await outputFile(file, json);
+    console.log(`  Generated static-${name}.json with ${data.length} releases`);
+  }
+
+  return name;
 }
 
 schedule(async () => {
@@ -24,29 +49,32 @@ schedule(async () => {
 
   let next = null;
 
-  while (releases.length > SEGMENT_SIZE) {
-    const segments = releases.slice(0, SEGMENT_SIZE);
+  while (releases.length > 1000) {
+    const { head: segments, tail } = slice(releases, 1000);
     segments.reverse();
-    releases = releases.slice(SEGMENT_SIZE);
+    releases = tail;
+    next = await writeFile(segments, next);
+  }
 
-    const json = JSON.stringify({
-      data: segments,
-      next: next,
-    });
+  while (releases.length > 500) {
+    const { head: segments, tail } = slice(releases, 500);
+    segments.reverse();
+    releases = tail;
+    next = await writeFile(segments, next);
+  }
 
-    const hash = sha1(json).substr(0, 8);
-    const date = shortDate(segments[0].date);
+  while (releases.length > 200) {
+    const { head: segments, tail } = slice(releases, 200);
+    segments.reverse();
+    releases = tail;
+    next = await writeFile(segments, next);
+  }
 
-    next = `${date}-${hash}`;
-
-    const file = join(OUT_DIR, `static-${next}.json`);
-
-    if (await pathExists(file)) {
-      // console.log(`  Skipped ${next}.json`);
-    } else {
-      await outputFile(file, json);
-      console.log(`  Generated static-${next}.json`);
-    }
+  while (releases.length > 10) {
+    const { head: segments, tail } = slice(releases, 10);
+    segments.reverse();
+    releases = tail;
+    next = await writeFile(segments, next);
   }
 
   releases.reverse();
