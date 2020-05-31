@@ -18,12 +18,18 @@ module.exports = async function fetchReleases() {
       continue;
     }
 
-    releases.push({
+    const release = {
       date: date.toDate(),
       tag: fields[2].trim(),
       chipset: fields[3].trim(),
       version: fields[5].trim().split('.').map(Number).join('.')
-    });
+    };
+
+    if (release.chipset == '0' || release.version == '0') {
+      continue;
+    }
+
+    releases.push(release);
   }
 
   return releases;
