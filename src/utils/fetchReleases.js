@@ -29,6 +29,18 @@ module.exports = async function fetchReleases() {
       continue;
     }
 
+    if (release.tag == 'LNX.LW.2.1-07600-8x26.0') {
+      continue;
+    }
+
+    if (release.tag == 'M8960AAAAANLYA113112') {
+      release.version = '4.1.1';
+    }
+
+    if (release.tag == 'LA.UM.6.8.2.r1-01700-SDM710.0') {
+      release.chipset = 'sdm710';
+    }
+
     releases.push(release);
   }
 
