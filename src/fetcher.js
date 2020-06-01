@@ -1,6 +1,7 @@
 const { join } = require('path');
 const { pathExists, outputFile, readFile } = require('fs-extra');
 const moment = require('moment');
+const { uniq, sortBy } = require('lodash');
 
 const fetchReleases = require('./utils/fetchReleases');
 const schedule = require('./utils/schedule');
@@ -43,10 +44,17 @@ schedule(async () => {
   console.log('Checking for update...');
 
   let releases = await fetchReleases();
-  releases.reverse();
-
   console.log(`Fetched ${releases.length} releases`);
 
+  const chipsets = uniq(releases.map(({ chipset }) => chipset));
+  const versions = sortBy(uniq(releases.map(({ version }) => version)), (version) => {
+    const v = version.split('.');
+    return parseInt(v[0]) * 10000 + parseInt(v[1]) * 100 + parseInt(v[2]);
+  });
+
+  versions.reverse();
+
+  releases.reverse();
   let next = null;
 
   while (releases.length > 1000) {
@@ -81,6 +89,8 @@ schedule(async () => {
 
   const json = JSON.stringify({
     data: releases,
+    chipsets: chipsets,
+    versions: versions,
     next: next,
   });
 
