@@ -1,7 +1,7 @@
 const { join } = require('path');
 const { pathExists, outputFile, readFile } = require('fs-extra');
 const moment = require('moment');
-const { uniq, sortBy } = require('lodash');
+const { uniq, uniqBy, sortBy } = require('lodash');
 
 const fetchReleases = require('./utils/fetchReleases');
 const schedule = require('./utils/schedule');
@@ -43,7 +43,7 @@ async function writeFile(data, next) {
 schedule(async () => {
   console.log('Checking for update...');
 
-  let releases = await fetchReleases();
+  let releases = uniqBy(await fetchReleases(), 'tag');
   console.log(`Fetched ${releases.length} releases`);
 
   const chipsets = uniq(releases.map(({ chipset }) => chipset));
