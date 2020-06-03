@@ -41,6 +41,22 @@ module.exports = async function fetchReleases() {
       release.chipset = 'sdm710';
     }
 
+    if (release.tag == 'LA.UM.8.4.r1-04700-8x98.0-1') {
+      release.tag = 'LA.UM.8.4.r1-04700-8x98.0';
+    }
+
+    if (release.tag == 'LA.UM.6.2.c26-01400-sdm660.0-1') {
+      release.tag = 'LA.UM.6.2.c26-01400-sdm660.0';
+    }
+
+    if (release.tag == 'LA.UM.5.5.r1-09000-8x96.0-1') {
+      release.tag = 'LA.UM.5.5.r1-09000-8x96.0';
+    }
+
+    if (release.tag == 'LA.BR.1.1.3.c1-06700-8x16.0-1') {
+      release.tag = 'LA.BR.1.1.3.c1-06700-8x16.0';
+    }
+
     releases.push(release);
   }
 
