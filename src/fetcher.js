@@ -4,6 +4,7 @@ const moment = require('moment');
 const { uniq, sortBy } = require('lodash');
 
 const fetchReleases = require('./utils/fetchReleases');
+const fetchManifest = require('./utils/fetchManifest');
 const schedule = require('./utils/schedule');
 const sha1 = require('./utils/sha1');
 
@@ -46,6 +47,26 @@ schedule(async () => {
   let releases = await fetchReleases();
   console.log(`Fetched ${releases.length} releases`);
 
+  console.log(`Fetching manifests...`);
+
+  for (const release of releases) {
+    try {
+      const name = `manifest-${release.tag}`;
+      const file = join(OUT_DIR, `static-${name}.json`);
+
+      if (await pathExists(file)) {
+        continue;
+      }
+
+      const json = JSON.stringify(await fetchManifest(release.tag));
+
+      await outputFile(file, json);
+      console.log(`  Generated static-${name}.json`);
+    } catch (e) {
+      console.log(`  Error fetching manifest for ${release.tag}`);
+    }
+  }
+
   const chipsets = uniq(releases.map(({ chipset }) => chipset));
   const versions = sortBy(uniq(releases.map(({ version }) => version)), (version) => {
     const v = version.split('.');
@@ -57,12 +78,16 @@ schedule(async () => {
   releases.reverse();
   let next = null;
 
+  console.log(`Writing releases in 1000 group...`);
+
   while (releases.length > 1000) {
     const { head: segments, tail } = slice(releases, 1000);
     segments.reverse();
     releases = tail;
     next = await writeFile(segments, next);
   }
+
+  console.log(`Writing releases in 500 group...`);
 
   while (releases.length > 500) {
     const { head: segments, tail } = slice(releases, 500);
@@ -71,6 +96,8 @@ schedule(async () => {
     next = await writeFile(segments, next);
   }
 
+  console.log(`Writing releases in 200 group...`);
+
   while (releases.length > 200) {
     const { head: segments, tail } = slice(releases, 200);
     segments.reverse();
@@ -78,12 +105,16 @@ schedule(async () => {
     next = await writeFile(segments, next);
   }
 
+  console.log(`Writing releases in 10 group...`);
+
   while (releases.length > 10) {
     const { head: segments, tail } = slice(releases, 10);
     segments.reverse();
     releases = tail;
     next = await writeFile(segments, next);
   }
+
+  console.log(`Writing remaining ${releases.length} releases...`);
 
   releases.reverse();
 
