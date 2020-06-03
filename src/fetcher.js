@@ -105,6 +105,15 @@ schedule(async () => {
     next = await writeFile(segments, next);
   }
 
+  console.log(`Writing releases in 60 group...`);
+
+  while (releases.length > 60) {
+    const { head: segments, tail } = slice(releases, 60);
+    segments.reverse();
+    releases = tail;
+    next = await writeFile(segments, next);
+  }
+
   console.log(`Writing releases in 10 group...`);
 
   while (releases.length > 10) {
