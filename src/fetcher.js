@@ -4,7 +4,6 @@ const moment = require('moment');
 const { uniq, sortBy } = require('lodash');
 
 const fetchReleases = require('./utils/fetchReleases');
-const fetchManifest = require('./utils/fetchManifest');
 const schedule = require('./utils/schedule');
 const sha1 = require('./utils/sha1');
 
@@ -46,26 +45,6 @@ schedule(async () => {
 
   let releases = await fetchReleases();
   console.log(`Fetched ${releases.length} releases`);
-
-  console.log(`Fetching manifests...`);
-
-  for (const release of releases) {
-    try {
-      const name = `manifest-${release.tag}`;
-      const file = join(OUT_DIR, `static-${name}.json`);
-
-      if (await pathExists(file)) {
-        continue;
-      }
-
-      const json = JSON.stringify(await fetchManifest(release.tag));
-
-      await outputFile(file, json);
-      console.log(`  Generated static-${name}.json`);
-    } catch (e) {
-      console.log(`  Error fetching manifest for ${release.tag}`);
-    }
-  }
 
   const chipsets = uniq(releases.map(({ chipset }) => chipset));
   const versions = sortBy(uniq(releases.map(({ version }) => version)), (version) => {
