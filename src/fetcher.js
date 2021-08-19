@@ -41,8 +41,6 @@ async function writeFile(data, next) {
   return name;
 }
 
-const manifests = [];
-
 schedule(async () => {
   console.log('Checking for update...');
 
@@ -60,7 +58,10 @@ schedule(async () => {
         continue;
       }
 
-      manifests.push(release.tag);
+      const json = JSON.stringify(await fetchManifest(release.tag));
+
+      await outputFile(file, json);
+      console.log(`  Generated static-${name}.json`);
     } catch (e) {
       console.log(`  Error fetching manifest for ${release.tag}`);
     }
@@ -143,24 +144,3 @@ schedule(async () => {
 
   console.log('Done');
 }, INTERVAL_MS);
-
-schedule(async () => {
-    const tag = manifests.shift();
-    if (!tag) return;
-
-    try {
-      const name = `manifest-${tag}`;
-      const file = join(OUT_DIR, `static-${name}.json`);
-
-      if (await pathExists(file)) {
-        return;
-      }
-
-      const json = JSON.stringify(await fetchManifest(tag));
-
-      await outputFile(file, json);
-      console.log(`Fetched static-${name}.json`);
-    } catch (e) {
-      console.log(`Error fetching manifest for ${tag}`);
-    }
-}, 1000);
