@@ -1,27 +1,27 @@
-const { join } = require('path');
-const { pathExists, outputFile, readFile } = require('fs-extra');
-const moment = require('moment');
-const { uniq, sortBy } = require('lodash');
+import { join } from 'path';
+import { pathExists, outputFile, readFile } from 'fs-extra';
+import { DateTime } from 'luxon';
+import { uniq, sortBy } from 'lodash';
 
-const fetchReleases = require('./utils/fetchReleases');
-const schedule = require('./utils/schedule');
-const sha1 = require('./utils/sha1');
+import fetchReleases, { IRelease } from './utils/fetchReleases';
+import schedule from './utils/schedule';
+import sha1 from './utils/sha1';
 
 const INTERVAL_MS = 2 * 60 * 60 * 1000;
 const OUT_DIR = join(__dirname, '..', 'data');
 
-function shortDate(date) {
-  return moment.utc(date).format('YYYYMMDD');
+function shortDate(date: Date): string {
+  return DateTime.fromJSDate(date).toFormat('yyyyLLdd');
 }
 
-function slice(array, size) {
+function slice<T>(array: T[], size: number): { head: T[], tail: T[] } {
   return {
     head: array.slice(0, size),
     tail: array.slice(size),
   };
 }
 
-async function writeFile(data, next) {
+async function writeFile(data: IRelease[], next: string | null): Promise<string> {
   const json = JSON.stringify({ data, next });
 
   const hash = sha1(json).substr(0, 8);
@@ -55,7 +55,7 @@ schedule(async () => {
   versions.reverse();
 
   releases.reverse();
-  let next = null;
+  let next: string | null = null;
 
   console.log(`Writing releases in 1000 group...`);
 

@@ -3,7 +3,7 @@ services:
   caf_fetcher:
     build:
       context: .
-      dockerfile: Dockerfile-dev
+      dockerfile: Dockerfile.dev
     volumes:
       - ./src:/opt/app/src
       - ./data:/opt/app/data

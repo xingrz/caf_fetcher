@@ -1,11 +1,18 @@
-const rp = require('request-promise');
-const moment = require('moment');
+import http from 'got';
+import { DateTime } from 'luxon';
 
 const RELEASE_URL = 'https://wiki.codeaurora.org/xwiki/rest/wikis/xwiki/spaces/QAEP/pages/release';
 
-module.exports = async function fetchReleases() {
-  const releases = [];
-  const { content } = await rp.get(RELEASE_URL, { json: true });
+export interface IRelease {
+  date: Date;
+  tag: string;
+  chipset: string;
+  version: string;
+}
+
+export default async function fetchReleases(): Promise<IRelease[]> {
+  const releases: IRelease[] = [];
+  const { content } = await http.get(RELEASE_URL).json() as { content: string };
 
   for (const line of content.split('\n')) {
     const fields = line.split('|');
@@ -13,13 +20,13 @@ module.exports = async function fetchReleases() {
       continue;
     }
 
-    const date = moment.utc(fields[1].trim(), 'MMMM DD, YYYY');
-    if (!date.isValid()) {
+    const date = DateTime.fromFormat(fields[1].trim(), 'DDD');
+    if (!date.isValid) {
       continue;
     }
 
-    const release = {
-      date: date.toDate(),
+    const release: IRelease = {
+      date: date.toJSDate(),
       tag: fields[2].trim(),
       chipset: fields[3].trim(),
       version: fields[5].trim().split('.').map(Number).join('.')
