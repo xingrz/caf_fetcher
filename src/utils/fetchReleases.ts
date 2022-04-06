@@ -27,11 +27,19 @@ export default async function fetchReleases(): Promise<IRelease[]> {
       continue;
     }
 
+    const version = ((version) => {
+      if (!version || version == '00.00.00') {
+        return '-';
+      } else {
+        return version.split('.').map(Number).join('.');
+      }
+    })($(cells[4]).html());
+
     const release: IRelease = {
       date: date.toJSDate(),
       tag: $(cells[1]).html()!.trim(),
       chipset: $(cells[2]).html()!.trim(),
-      version: $(cells[4]).html()!.trim().split('.').map(Number).join('.')
+      version: version,
     };
 
     if (release.chipset == '0' || release.version == '0') {
