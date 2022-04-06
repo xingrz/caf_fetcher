@@ -1,7 +1,8 @@
 import http from 'got';
+import * as cheerio from 'cheerio';
 import { DateTime } from 'luxon';
 
-const RELEASE_URL = 'https://wiki.codeaurora.org/xwiki/rest/wikis/xwiki/spaces/QAEP/pages/release';
+const RELEASE_URL = 'https://wiki.codelinaro.org/wiki-la/release';
 
 export interface IRelease {
   date: Date;
@@ -12,24 +13,25 @@ export interface IRelease {
 
 export default async function fetchReleases(): Promise<IRelease[]> {
   const releases: IRelease[] = [];
-  const { content } = await http.get(RELEASE_URL).json() as { content: string };
+  const html = await http.get(RELEASE_URL).text();
+  const $ = cheerio.load(html);
 
-  for (const line of content.split('\n')) {
-    const fields = line.split('|');
-    if (fields.length != 6) {
+  for (const row of $('template[slot="contents"] table tr')) {
+    const cells = $('td', row);
+    if (cells.length != 5) {
       continue;
     }
 
-    const date = DateTime.fromFormat(fields[1].trim(), 'DDD');
+    const date = DateTime.fromFormat($(cells[0]).html()!.trim(), 'DDD');
     if (!date.isValid) {
       continue;
     }
 
     const release: IRelease = {
       date: date.toJSDate(),
-      tag: fields[2].trim(),
-      chipset: fields[3].trim(),
-      version: fields[5].trim().split('.').map(Number).join('.')
+      tag: $(cells[1]).html()!.trim(),
+      chipset: $(cells[2]).html()!.trim(),
+      version: $(cells[4]).html()!.trim().split('.').map(Number).join('.')
     };
 
     if (release.chipset == '0' || release.version == '0') {

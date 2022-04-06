@@ -12,6 +12,7 @@
   "license": "APACHE-2.0",
   "description": "",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
     "fs-extra": "^10.0.0",
     "got": "^11.8.2",
     "lodash": "^4.17.21",
