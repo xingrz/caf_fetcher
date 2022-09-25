@@ -2,7 +2,7 @@ import http from 'got';
 import * as cheerio from 'cheerio';
 import { DateTime } from 'luxon';
 
-const RELEASE_URL = 'https://wiki.codelinaro.org/wiki-la/release';
+const RELEASE_URL = 'https://wiki.codelinaro.org/en/clo/la/release';
 
 export interface IRelease {
   date: Date;
